@@ -1,14 +1,13 @@
-import torch;
+import torch
 import torch.utils
 import torch.distributions
 import torchvision
 import numpy as np
-import matplotlib.pyplot as plt;
-
-plt.rcParams['figure.dpi'] = 200
+import matplotlib.pyplot as plt
 import torch.nn.functional as F
 from PIL import Image
 import IPython
+plt.rcParams['figure.dpi'] = 200
 
 torch.manual_seed(0)
 
@@ -19,16 +18,14 @@ def plot_latent(model, data, num_batches=100):
     for i, (x, y) in enumerate(data):
         z = model.encoder_cont(x.to(device))
         z = z.to('cpu').detach().numpy()
-        if y.sum() != 0:
-            print(y.sum())
-        plt.scatter(z[:, 0], z[:, 1], c=y, cmap='tab10')
+        plt.scatter(z[:, 0], z[:, 1])  # , c=y, cmap='tab10')
         if i > num_batches:
             plt.colorbar()
             break
     plt.show()
 
 
-def plot_reconstructed(model, r0=(-5, 10), r1=(-10, 5), n=12, N=3, K=20):
+def plot_reconstructed(model, r0=(-5, 10), r1=(-10, 5), n=12, N=3, K=20, image_size=64):
     img = []
 
     ind = torch.zeros(N, 1).long()
@@ -43,10 +40,11 @@ def plot_reconstructed(model, r0=(-5, 10), r1=(-10, 5), n=12, N=3, K=20):
 
             z = torch.cat([z_cont, z_disc], dim=1).to(device)
             x_hat = model.decoder(z)
-            img.append(x_hat)
+            reconst_image = x_hat.view(x_hat.size(0), 3, image_size, image_size).detach().cpu()
+            img.append(reconst_image)
 
     img = torch.cat(img)
-    img = torchvision.utils.make_grid(img, nrow=n).permute(1, 2, 0).detach().cpu().numpy()
+    img = torchvision.utils.make_grid(img, nrow=n).permute(1, 2, 0).numpy()
     plt.imshow(img, extent=[*r0, *r1])
     plt.show()
 
