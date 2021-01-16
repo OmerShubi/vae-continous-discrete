@@ -3,18 +3,24 @@ import torch.utils
 import torch.distributions
 import torchvision
 import numpy as np
-import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
+import matplotlib.pyplot as plt;
+
+plt.rcParams['figure.dpi'] = 200
 import torch.nn.functional as F
 from PIL import Image
 import IPython
+
 torch.manual_seed(0)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 
 def plot_latent(model, data, num_batches=100):
     for i, (x, y) in enumerate(data):
         z = model.encoder_cont(x.to(device))
         z = z.to('cpu').detach().numpy()
+        if y.sum() != 0:
+            print(y.sum())
         plt.scatter(z[:, 0], z[:, 1], c=y, cmap='tab10')
         if i > num_batches:
             plt.colorbar()
@@ -22,17 +28,25 @@ def plot_latent(model, data, num_batches=100):
     plt.show()
 
 
-def plot_reconstructed(autoencoder, r0=(-5, 10), r1=(-10, 5), n=12):
-    w = 28
+def plot_reconstructed(model, r0=(-5, 10), r1=(-10, 5), n=12, N=3, K=20):
     img = []
+
+    ind = torch.zeros(N, 1).long()
+
+    ind[1] = 5
+    ind[0] = 5
+    ind[2] = 5
+    z_disc = F.one_hot(ind, num_classes=K).squeeze(1).view(1, -1).float()
     for i, z2 in enumerate(np.linspace(r1[1], r1[0], n)):
         for j, z1 in enumerate(np.linspace(*r0, n)):
-            z = torch.Tensor([[z1, z2]]).to(device)
-            x_hat = autoencoder.decoder(z)
+            z_cont = torch.Tensor([[z1, z2]])
+
+            z = torch.cat([z_cont, z_disc], dim=1).to(device)
+            x_hat = model.decoder(z)
             img.append(x_hat)
 
     img = torch.cat(img)
-    img = torchvision.utils.make_grid(img, nrow=12).permute(1, 2, 0).detach().cpu().numpy()
+    img = torchvision.utils.make_grid(img, nrow=n).permute(1, 2, 0).detach().cpu().numpy()
     plt.imshow(img, extent=[*r0, *r1])
     plt.show()
 
@@ -85,7 +99,8 @@ def interpolate_gif(autoencoder, filename, x_1, x_2, n=100):
         append_images=images_list[1:],
         loop=1)
 
-def image_grid_gif(model,N,K, image_size):
+
+def image_grid_gif(model, N, K, image_size):
     ind = torch.zeros(N, 1).long()
     images_list = []
     for k in range(K):
@@ -117,5 +132,3 @@ def image_grid_gif(model,N,K, image_size):
         loop=10)
 
     IPython.display.IFrame("dvae.gif", width=900, height=450)
-
-
