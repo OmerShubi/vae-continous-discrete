@@ -19,15 +19,10 @@ plt.rcParams['figure.dpi'] = 200
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # TODO
-#  1. BCE & KL losses Graph
-#  Save:
-#   Model & plot & image & graphs in folder (+params?)
-#  2. Save plots and save with new names in
-#  3. More visualizations
-#  4. Use features?
+#  3. More visualizations (Use features? Combine cont and disc?)
 #  5. Add titles, axis etc.
 #  6. CNN
-#  7. Save model
+#  7. Params
 #  8. reproduce_hw3() - should be able to reproduce the results that you reported
 #  9. Report
 
@@ -40,6 +35,8 @@ def main():
     K = 20  # one-of-K vector
     image_path = './data'
     base_path = './results'
+    batch_size = 1024
+    num_batches = 10
     if not os.path.exists(base_path):
         os.mkdir(base_path)
     results_path = os.path.join(base_path, datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
@@ -58,7 +55,7 @@ def main():
         # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
     dataset = ImageFolder(image_path, transform)
-    data_loader = DataLoader(dataset=dataset, batch_size=1024, shuffle=True, num_workers=num_workers, drop_last=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
 
     vae_joint = JointVAE(latent_dim_disc=N, latent_dim_cont=z_dim, categorical_dim=K, input_dim=image_dim, output_dim=image_dim).to(device)
 
@@ -66,7 +63,7 @@ def main():
     train_joint(model=vae_joint, optimizer=optimizer, data_loader=data_loader, save_path=results_path, num_epochs=num_epochs, temp=temp, hard=hard)
 
     # Viz
-    plot_latent(vae_joint, data_loader, save_path=results_path)
+    plot_latent(vae_joint, data_loader, save_path=results_path, num_batches=num_batches)
     plot_reconstructed(vae_joint, r0=(-15, 15), r1=(-15, 15), n=6, N=N, K=K, image_size=image_size, save_path=results_path)
     # interpolate_gif(vae_joint, "vae_cont", x_1, x_2) # TODO fix function if want to use!
     image_grid_gif(vae_joint, N, K, image_size, save_path=results_path)

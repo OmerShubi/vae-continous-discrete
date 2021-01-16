@@ -68,14 +68,21 @@ def image_grid_gif(model, N, K, image_size, save_path):
 
 
 def plot_latent(model, data, save_path, num_batches=100):
+    z0 = []
+    z1 = []
     for i, (x, y) in enumerate(data):
         z = model.encoder_cont(x.to(device))
         z = z.to('cpu').detach().numpy()
-        # TODO move scatter to after for for speeduppp
-        plt.scatter(z[:, 0], z[:, 1], c=0)  # , c=y, cmap='tab10')
+        z0.extend(z[:, 0])
+        z1.extend(z[:, 1])
         if i > num_batches:
-            plt.colorbar()
+            # plt.colorbar()
             break
+
+    plt.scatter(z0, z1, c=[0]*len(z0))  # , c=y, cmap='tab10')
+    plt.title("Continuous Latent Variables")
+    plt.xlabel("z0")
+    plt.ylabel("z1")
     plt.savefig(os.path.join(save_path, 'scatter_plot.png'))
     plt.show()
 
@@ -100,6 +107,23 @@ def plot_reconstructed(model, r0, r1, n, N, K, image_size, save_path):
 
     img = torch.cat(img)
     img = torchvision.utils.make_grid(img, nrow=n).permute(1, 2, 0).numpy()
-    # plt.imshow(img, extent=[*r0, *r1])
+    plt.imshow(img, extent=[*r0, *r1])
+    plt.title("Reconstructed Images, Continuous Variable Adjustment")
+    plt.xlabel("z0")
+    plt.ylabel("z1")
+    plt.savefig(os.path.join(save_path, 'cont_plot.png'))
+
     plt.show()
-    plt.imsave(os.path.join(save_path, 'cont_plot.png'), img, extent=[*r0, *r1])
+
+
+def plot_loss(BCE_loss, KL_loss, save_path):
+    plt.plot(list(range(1, len(BCE_loss) + 1)), BCE_loss, label='BCE loss')
+    plt.plot(list(range(1, len(KL_loss) + 1)), KL_loss, label='KL loss')
+    plt.title("BCE and KL Loss vs Epochs")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.savefig(os.path.join(save_path, 'loss_plot.png'))
+    plt.show()
+
+

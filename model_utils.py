@@ -8,6 +8,8 @@ import torch.nn.functional as F
 import torch.utils
 from tqdm import trange, tqdm
 
+from vis_utils import plot_loss
+
 plt.rcParams['figure.dpi'] = 200
 
 torch.manual_seed(0)
@@ -52,7 +54,7 @@ def loss_function(recon_x, x, qy, output_dim):
     log_ratio = torch.log(qy * qy.size(-1) + 1e-20)
     KLD = torch.sum(qy * log_ratio, dim=-1).sum()
 
-    return BCE + KLD
+    return BCE, KLD
 
 
 def train_joint(model, optimizer, data_loader, save_path, num_epochs=20, temp=1.0, hard=False):
@@ -60,21 +62,34 @@ def train_joint(model, optimizer, data_loader, save_path, num_epochs=20, temp=1.
     ANNEAL_RATE = 0.00003
     model.train()
     train_loss = 0
+    BCE_loss = []
+    KL_loss = []
     for epoch in trange(num_epochs):
         print(f"epoch {epoch}")
         epoch_loss = 0
+        epoch_BCE_loss = 0
+        epoch_KL_loss = 0
         for batch_idx, (x, _) in enumerate(tqdm(data_loader)):
             optimizer.zero_grad()
             x = x.to(device)  # GPU
             x_hat, qy = model(x, temp, hard)
-            loss = loss_function(x_hat, x, qy, model.output_dim)
-            loss += model.kl_cont
-            epoch_loss += loss
+            BCE, KLD = loss_function(x_hat, x, qy, model.output_dim)
+            KLC = model.kl_cont
+            loss = BCE + KLD + KLC
             loss.backward()
+            epoch_BCE_loss += BCE.item()
+            epoch_KL_loss += (KLC+KLD).item()
+            epoch_loss += loss.item()
             train_loss += loss.item() * len(x)
             optimizer.step()
             if batch_idx % 100 == 1:
                 temp = np.maximum(temp * np.exp(-ANNEAL_RATE * batch_idx), temp_min)
 
+        BCE_loss.append(epoch_BCE_loss/len(data_loader.dataset))
+        KL_loss.append(epoch_KL_loss/len(data_loader.dataset))
         print(f"epoch {epoch}, loss:{epoch_loss / len(data_loader.dataset)}")
+
     torch.save(model, os.path.join(save_path, 'model.pth'))
+
+    plot_loss(BCE_loss, KL_loss, save_path)
+
