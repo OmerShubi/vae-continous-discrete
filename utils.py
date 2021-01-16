@@ -1,4 +1,4 @@
-import torch; torch.manual_seed(0)
+import torch;
 import torch.utils
 import torch.distributions
 import torchvision
@@ -7,12 +7,13 @@ import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 import torch.nn.functional as F
 from PIL import Image
 import IPython
+torch.manual_seed(0)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def plot_latent(autoencoder, data, num_batches=100):
+def plot_latent(model, data, num_batches=100):
     for i, (x, y) in enumerate(data):
-        z = autoencoder.encoder(x.to(device))
+        z = model.encoder_cont(x.to(device))
         z = z.to('cpu').detach().numpy()
         plt.scatter(z[:, 0], z[:, 1], c=y, cmap='tab10')
         if i > num_batches:
@@ -84,7 +85,7 @@ def interpolate_gif(autoencoder, filename, x_1, x_2, n=100):
         append_images=images_list[1:],
         loop=1)
 
-def image_grid_gif(model,N,K):
+def image_grid_gif(model,N,K, image_size):
     ind = torch.zeros(N, 1).long()
     images_list = []
     for k in range(K):
@@ -99,9 +100,11 @@ def image_grid_gif(model,N,K):
                 to_generate[index] = z
                 index += 1
 
-        generate = to_generate.view(-1, K * N).to(device)
-        reconst_images = model.decoder(generate)
-        reconst_images = reconst_images.view(reconst_images.size(0), 1, 28, 28).detach().cpu()
+        z_disc = to_generate.view(-1, K * N)
+        z_cont = torch.randn(2).repeat(400, 1)
+        z = torch.cat([z_cont, z_disc], dim=1).to(device)
+        reconst_images = model.decoder(z)
+        reconst_images = reconst_images.view(reconst_images.size(0), 3, image_size, image_size).detach().cpu()
         grid_img = torchvision.utils.make_grid(reconst_images, nrow=K).permute(1, 2, 0).numpy() * 255
         grid_img = grid_img.astype(np.uint8)
         images_list.append(Image.fromarray(grid_img))
@@ -114,3 +117,5 @@ def image_grid_gif(model,N,K):
         loop=10)
 
     IPython.display.IFrame("dvae.gif", width=900, height=450)
+
+
