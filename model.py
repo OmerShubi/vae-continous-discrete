@@ -1,5 +1,5 @@
 import torch
-from utils import gumbel_softmax
+from model_utils import gumbel_softmax
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils
