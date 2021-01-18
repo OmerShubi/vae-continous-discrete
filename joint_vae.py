@@ -20,7 +20,6 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # TODO
 #  3. More visualizations (Use features? Combine cont and disc?)
-#  5. Add titles, axis etc.
 #  6. CNN
 #  7. Params
 #  8. reproduce_hw3() - should be able to reproduce the results that you reported
@@ -45,7 +44,7 @@ def main():
     temp = 1.0
     hard = False
     num_workers = 0 if DEBUG else 5
-    num_epochs = 1 if DEBUG else 1  # TODO more epochs
+    num_epochs = 1 if DEBUG else 30  # TODO more epochs
 
     image_dim = image_size * image_size * 3
 

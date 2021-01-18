@@ -89,7 +89,7 @@ def train_joint(model, optimizer, data_loader, save_path, num_epochs=20, temp=1.
         KL_loss.append(epoch_KL_loss/len(data_loader.dataset))
         print(f"epoch {epoch}, loss:{epoch_loss / len(data_loader.dataset)}")
 
-    torch.save(model, os.path.join(save_path, 'model.pth'))
+        torch.save(model, os.path.join(save_path, 'model.pth'))
 
     plot_loss(BCE_loss, KL_loss, save_path)
 

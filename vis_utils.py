@@ -81,8 +81,8 @@ def plot_latent(model, data, save_path, num_batches=100):
 
     plt.scatter(z0, z1, c=[0]*len(z0))  # , c=y, cmap='tab10')
     plt.title("Continuous Latent Variables")
-    plt.xlabel("z0")
-    plt.ylabel("z1")
+    plt.xlabel("$z_0$")
+    plt.ylabel("$z_1$")
     plt.savefig(os.path.join(save_path, 'scatter_plot.png'))
     plt.show()
 
@@ -109,8 +109,8 @@ def plot_reconstructed(model, r0, r1, n, N, K, image_size, save_path):
     img = torchvision.utils.make_grid(img, nrow=n).permute(1, 2, 0).numpy()
     plt.imshow(img, extent=[*r0, *r1])
     plt.title("Reconstructed Images, Continuous Variable Adjustment")
-    plt.xlabel("z0")
-    plt.ylabel("z1")
+    plt.xlabel("$z_0$")
+    plt.ylabel("$z_1$")
     plt.savefig(os.path.join(save_path, 'cont_plot.png'))
 
     plt.show()
