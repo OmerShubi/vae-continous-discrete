@@ -51,7 +51,7 @@ def image_grid_gif(model, N, K, image_size, save_path):
                 index += 1
 
         z_disc = to_generate.view(-1, K * N)
-        z_cont = torch.randn(2).repeat(400, 1)
+        z_cont = torch.randn(2).repeat(K*K, 1)
         z = torch.cat([z_cont, z_disc], dim=1).to(device)
         reconst_images = model.decoder(z)
         reconst_images = reconst_images.view(reconst_images.size(0), 3, image_size, image_size).detach().cpu()

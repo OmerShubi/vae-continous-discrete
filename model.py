@@ -123,7 +123,7 @@ class JointVAE(nn.Module):
         x = torch.flatten(x, start_dim=1)
         x = F.relu(self.linear1(x))
         mu, log_var = torch.split(self.to_mean_logvar(x), 2, dim=-1)
-        self.kl_cont = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp()) # TODO mean?
+        self.kl_cont = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
         return self.reparametrization_trick(mu, log_var)
 
     def encoder_disc(self, x):

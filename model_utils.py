@@ -75,7 +75,7 @@ def train_joint(model, optimizer, data_loader, save_path, num_epochs=20, temp=1.
             x_hat, qy = model(x, temp, hard)
             BCE, KLD = loss_function(x_hat, x, qy, model.output_dim)
             KLC = model.kl_cont
-            loss = BCE + KLD + KLC
+            loss = BCE + 150*(KLD + KLC)
             loss.backward()
             epoch_BCE_loss += BCE.item()
             epoch_KL_loss += (KLC+KLD).item()

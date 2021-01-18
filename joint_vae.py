@@ -29,9 +29,9 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def main():
     DEBUG = False
     z_dim = 2
-    image_size = 128
+    image_size = 64
     N = 3
-    K = 20  # one-of-K vector
+    K = 12  # one-of-K vector
     image_path = './data'
     base_path = './results'
     batch_size = 1024
@@ -44,7 +44,7 @@ def main():
     temp = 1.0
     hard = False
     num_workers = 0 if DEBUG else 5
-    num_epochs = 1 if DEBUG else 30  # TODO more epochs
+    num_epochs = 1 if DEBUG else 3  # TODO more epochs
 
     image_dim = image_size * image_size * 3
 
