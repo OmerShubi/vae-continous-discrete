@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 from PIL import Image
+from torchvision import transforms
 
 plt.rcParams['figure.dpi'] = 200
 
@@ -16,35 +17,29 @@ torch.manual_seed(0)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-def interpolate_gif(model, filename, z_1, z_2, n=100):
-    # z_1 = autoencoder.encoder(x_1.unsqueeze(0))
-    # z_2 = autoencoder.encoder(x_2.unsqueeze(0))
-
-    interpolate_list = []
-    image_size=64
+def interpolate_gif(model, save_path, z_0_low, z_0_upper, z_1, N=3, K=20, image_size=128, n=100):
+    images_list = []
     for t in np.linspace(0, 1, n):
-        N = 3
-        K = 12
-
         ind = torch.zeros(N, 1).long()
         ind[1] = 5
         ind[0] = 5
         ind[2] = 5
         z_disc = F.one_hot(ind, num_classes=K).squeeze(1).view(1, -1).float()
 
-        z_cont_1 = torch.tensor(z_1 + (z_2 - z_1) * t)
-        z_cont = torch.Tensor([[z_cont_1, 0]])
+        z_cont_1 = z_0_low + (z_0_upper - z_0_low) * t
+        z_cont = torch.Tensor([[z_cont_1, z_1]])
 
         z = torch.cat([z_cont, z_disc], dim=1).to(device)
         x_hat = model.decoder(z)
-        reconst_image = x_hat.view(x_hat.size(0), 3, image_size, image_size).detach().cpu().numpy() * 255
-        interpolate_list.append(reconst_image)
+        reconst_image = x_hat.view(x_hat.size(0), 3, image_size, image_size).detach().cpu()
+        grid_img = torchvision.utils.make_grid(reconst_image, nrow=1).permute(1, 2, 0).numpy() * 255
+        grid_img = grid_img.astype(np.uint8)
+        images_list.append(Image.fromarray(grid_img).resize((256,256)))
 
-    images_list = [Image.fromarray(img) for img in interpolate_list]
     images_list = images_list + images_list[::-1]  # loop back beginning
 
     images_list[0].save(
-        f'{filename}.gif',
+        os.path.join(save_path, 'cont.gif'),
         save_all=True,
         append_images=images_list[1:],
         loop=1)

@@ -10,7 +10,7 @@ from torchvision.datasets import ImageFolder
 
 from model import JointVAE
 from model_utils import train_joint
-from vis_utils import plot_reconstructed, image_grid_gif, plot_latent
+from vis_utils import plot_reconstructed, image_grid_gif, plot_latent, interpolate_gif
 import datetime
 
 torch.manual_seed(0)
@@ -41,9 +41,9 @@ def main():
     if not os.path.exists(results_path):
         os.mkdir(results_path)
     temp = 1.0
-    hard = True
+    hard = False
     num_workers = 0 if DEBUG else 5
-    num_epochs = 1 if DEBUG else 10
+    num_epochs = 1 if DEBUG else 1
 
     image_dim = image_size * image_size * 3
 
@@ -65,7 +65,7 @@ def main():
     # Viz
     plot_latent(vae_joint, data_loader, save_path=results_path, num_batches=num_batches)
     plot_reconstructed(vae_joint, r0=(-15, 15), r1=(-15, 15), n=6, N=N, K=K, image_size=image_size, save_path=results_path)
-    # interpolate_gif(vae_joint, "vae_cont", -0.2, 0.2) # TODO fix function if want to use!
+    interpolate_gif(vae_joint, results_path, z_0_low=-15, z_0_upper=15, z_1=12, N=N, K=K, image_size=image_size)
     image_grid_gif(vae_joint, N, K, image_size, save_path=results_path)
 
 
