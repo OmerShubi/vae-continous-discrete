@@ -7,7 +7,7 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
 from joint_vae import JointVAE
-from vis_utils import plot_latent, image_grid_gif, plot_reconstructed
+from vis_utils import plot_latent, image_grid_gif, plot_reconstructed, interpolate_gif
 
 
 def reproduce_hw3():
@@ -40,11 +40,11 @@ def reproduce_hw3():
     # vae_joint.load_state_dict(model_stuff)
     vae_joint_model.to(device)
     # Viz
-    plot_latent(vae_joint_model, data_loader, save_path=results_path, num_batches=num_batches)
-    plot_reconstructed(vae_joint_model, r0=(-15, 15), r1=(-15, 15), n=6, N=N, K=K, image_size=image_size,
-                       save_path=results_path)
-    # interpolate_gif(vae_joint, "vae_cont", x_1, x_2) # TODO fix function if want to use!
-    image_grid_gif(vae_joint_model, N, K, image_size, save_path=results_path)
+    # plot_latent(vae_joint_model, data_loader, save_path=results_path, num_batches=num_batches)
+    # plot_reconstructed(vae_joint_model, r0=(-15, 15), r1=(-15, 15), n=6, N=N, K=K, image_size=image_size,
+    #                    save_path=results_path)
+    interpolate_gif(vae_joint_model, "vae_cont", 0.2, 0.8)  # TODO fix function if want to use!
+    # image_grid_gif(vae_joint_model, N, K, image_size, save_path=results_path)
 
 
 if __name__ == '__main__':

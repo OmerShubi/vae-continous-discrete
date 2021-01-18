@@ -16,16 +16,31 @@ torch.manual_seed(0)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-def interpolate_gif(autoencoder, filename, x_1, x_2, n=100):
-    z_1 = autoencoder.encoder(x_1.unsqueeze(0))
-    z_2 = autoencoder.encoder(x_2.unsqueeze(0))
+def interpolate_gif(model, filename, z_1, z_2, n=100):
+    # z_1 = autoencoder.encoder(x_1.unsqueeze(0))
+    # z_2 = autoencoder.encoder(x_2.unsqueeze(0))
 
-    z = torch.stack([z_1 + (z_2 - z_1) * t for t in np.linspace(0, 1, n)])
+    interpolate_list = []
+    image_size=64
+    for t in np.linspace(0, 1, n):
+        N = 3
+        K = 12
 
-    interpolate_list = autoencoder.decoder(z)
-    interpolate_list = interpolate_list.to('cpu').detach().numpy() * 255
+        ind = torch.zeros(N, 1).long()
+        ind[1] = 5
+        ind[0] = 5
+        ind[2] = 5
+        z_disc = F.one_hot(ind, num_classes=K).squeeze(1).view(1, -1).float()
 
-    images_list = [Image.fromarray(img.reshape(28, 28)).resize((256, 256)) for img in interpolate_list]
+        z_cont_1 = torch.tensor(z_1 + (z_2 - z_1) * t)
+        z_cont = torch.Tensor([[z_cont_1, 0]])
+
+        z = torch.cat([z_cont, z_disc], dim=1).to(device)
+        x_hat = model.decoder(z)
+        reconst_image = x_hat.view(x_hat.size(0), 3, image_size, image_size).detach().cpu().numpy() * 255
+        interpolate_list.append(reconst_image)
+
+    images_list = [Image.fromarray(img) for img in interpolate_list]
     images_list = images_list + images_list[::-1]  # loop back beginning
 
     images_list[0].save(
@@ -51,7 +66,7 @@ def image_grid_gif(model, N, K, image_size, save_path):
                 index += 1
 
         z_disc = to_generate.view(-1, K * N)
-        z_cont = torch.randn(2).repeat(K*K, 1)
+        z_cont = torch.randn(2).repeat(K * K, 1)
         z = torch.cat([z_cont, z_disc], dim=1).to(device)
         reconst_images = model.decoder(z)
         reconst_images = reconst_images.view(reconst_images.size(0), 3, image_size, image_size).detach().cpu()
@@ -79,7 +94,7 @@ def plot_latent(model, data, save_path, num_batches=100):
             # plt.colorbar()
             break
 
-    plt.scatter(z0, z1, c=[0]*len(z0))  # , c=y, cmap='tab10')
+    plt.scatter(z0, z1, c=[0] * len(z0))  # , c=y, cmap='tab10')
     plt.title("Continuous Latent Variables")
     plt.xlabel("$z_0$")
     plt.ylabel("$z_1$")
@@ -125,5 +140,3 @@ def plot_loss(BCE_loss, KL_loss, save_path):
     plt.legend()
     plt.savefig(os.path.join(save_path, 'loss_plot.png'))
     plt.show()
-
-
