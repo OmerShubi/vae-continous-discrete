@@ -16,7 +16,6 @@ import datetime
 torch.manual_seed(0)
 plt.rcParams['figure.dpi'] = 200
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # TODO
 #  3. More visualizations (Use features? Combine cont and disc?)
@@ -27,6 +26,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def main():
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
     DEBUG = False
     z_dim = 2
     image_size = 64
@@ -44,7 +45,7 @@ def main():
     temp = 1.0
     hard = False
     num_workers = 0 if DEBUG else 5
-    num_epochs = 1 if DEBUG else 3  # TODO more epochs
+    num_epochs = 1 if DEBUG else 10
 
     image_dim = image_size * image_size * 3
 
