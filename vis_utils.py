@@ -44,8 +44,35 @@ def interpolate_gif(model, save_path, z_0_low, z_0_upper, z_1, N=3, K=20, image_
         append_images=images_list[1:],
         loop=1)
 
+def interpolate_gif2(model, save_path, z_0, z_1_l, z_1_u, N=3, K=20, image_size=128, n=100):
+    images_list = []
+    for t in np.linspace(0, 1, n):
+        ind = torch.zeros(N, 1).long()
+        ind[1] = 5
+        ind[0] = 5
+        ind[2] = 5
+        z_disc = F.one_hot(ind, num_classes=K).squeeze(1).view(1, -1).float()
 
-def image_grid_gif(model, N, K, image_size, save_path):
+        z_cont_1 = z_1_l + (z_1_u - z_1_l) * t
+        z_cont = torch.Tensor([[z_0, z_cont_1]])
+
+        z = torch.cat([z_cont, z_disc], dim=1).to(device)
+        x_hat = model.decoder(z)
+        reconst_image = x_hat.view(x_hat.size(0), 3, image_size, image_size).detach().cpu()
+        grid_img = torchvision.utils.make_grid(reconst_image, nrow=1).permute(1, 2, 0).numpy() * 255
+        grid_img = grid_img.astype(np.uint8)
+        images_list.append(Image.fromarray(grid_img).resize((256,256)))
+
+    images_list = images_list + images_list[::-1]  # loop back beginning
+
+    images_list[0].save(
+        os.path.join(save_path, 'cont.gif'),
+        save_all=True,
+        append_images=images_list[1:],
+        loop=1)
+
+
+def image_grid_gif(model, N, K, image_size, save_path, z0, z1):
     ind = torch.zeros(N, 1).long()
     images_list = []
     for k in range(K):
@@ -61,7 +88,8 @@ def image_grid_gif(model, N, K, image_size, save_path):
                 index += 1
 
         z_disc = to_generate.view(-1, K * N)
-        z_cont = torch.randn(2).repeat(K * K, 1)
+        z_cont = torch.Tensor([[z0, z1]]).repeat(K * K, 1)
+        # z_cont = torch.randn(2).repeat(K * K, 1)
         z = torch.cat([z_cont, z_disc], dim=1).to(device)
         reconst_images = model.decoder(z)
         reconst_images = reconst_images.view(reconst_images.size(0), 3, image_size, image_size).detach().cpu()
