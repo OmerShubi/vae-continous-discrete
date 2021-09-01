@@ -3,7 +3,7 @@ It makes use of both continuous and discrete variables, thus it is a Joint VAE m
 
 To recreate our model - run `main.py`
 
-To reproduce our model - run `reproduce_hw3.py`
+To reproduce our model - run `reproduce_results.py`
 
 It assumes the model to be saved in the same directory as the code.
 
